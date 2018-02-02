@@ -1,0 +1,8 @@
+---
+#
+# Default is a empty list!
+#
+firewalld_services: []
+firewalld_ports: []
+firewalld_rich_rules: []
+firewalld_enabled: true

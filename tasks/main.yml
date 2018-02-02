@@ -1,0 +1,61 @@
+---
+- name: Install firewalld package
+  package:
+    name: firewalld
+    state: present
+
+- name: Ensure firewalld is running and enabled on boot
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+  when: firewalld_enabled
+
+- name: Ensure firewalld is stopped and disabled on boot
+  service:
+    name: firewalld
+    state: stopped
+    enabled: no
+  when: not firewalld_enabled
+
+- name: Add firewalld rule for ssh (this is always enabled!)
+  firewalld:
+    service: ssh
+    zone: public
+    permanent: True
+    state: enabled
+  notify: firewalld complete reload
+  when: firewalld_enabled
+
+- name: Add firewalld rules for services
+  firewalld:
+    service: "{{ item.service }}"
+    zone: '{{ item.zone | default ("public") }}'
+    permanent: "{{ item.permanent | default (True) }}"
+    immediate: "{{ item.immediate | default (True) }}"
+    state: '{{ item.state | default ("enabled") }}'
+  with_items: "{{ firewalld_services }}"
+  notify: firewalld complete reload
+  when: firewalld_enabled
+
+- name: Add firewalld rules for ports
+  firewalld:
+    port: "{{ item.port }}"
+    zone: '{{ item.zone | default ("public") }}'
+    permanent: "{{ item.permanent | default (True) }}"
+    immediate: "{{ item.immediate | default (True) }}"
+    state: '{{ item.state | default ("enabled") }}'
+  with_items: "{{ firewalld_ports }}"
+  notify: firewalld complete reload
+  when: firewalld_enabled
+
+- name: Add rich rules
+  firewalld:
+    rich_rule: "{{ item.rule }}"
+    zone: '{{ item.zone | default ("public") }}'
+    permanent: "{{ item.permanent | default (True) }}"
+    immediate: "{{ item.immediate | default (True) }}"
+    state: '{{ item.state | default ("enabled") }}'
+  with_items: "{{ firewalld_rich_rules }}"
+  notify: firewalld complete reload
+  when: firewalld_enabled
